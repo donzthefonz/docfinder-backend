@@ -9,6 +9,8 @@ verify_ssl = true
 flask = "*"
 flask-sqlalchemy = "*"
 flask-restplus = "*"
+werkzeug = "==0.16.0"
+flask-cors = "*"
 
 [requires]
 python_version = "3.7"

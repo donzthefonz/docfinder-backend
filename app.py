@@ -3,7 +3,7 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_restplus import Resource, Api, fields
 from flask_cors import CORS, cross_origin
-import json
+import smtplib, ssl
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -11,6 +11,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///doctors.sqlite3'
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 db = SQLAlchemy(app)
+
+GMAIL_PORT = 465  # For SSL
+GMAIL_PASSWORD = "794613pa55"  # would normally keep in .env
+GMAIL_FROM_EMAIL = "adatestap@gmail.com"
 
 
 # Would normally put this in a models file
@@ -50,30 +54,42 @@ class HelloWorld(Resource):
 class Doctors(Resource):
     def get(self):
         try:
-            # Get doctors data and return
+            # Get doctors data
             doctors = Doctor.query.all()
             docs = []
             for doc in doctors:
                 doc_dict = doc.as_dict()
                 docs.append(doc_dict)
-            return {'code': 200,
+            return {'Code': 200,
                     'doctors': docs}
 
         except Exception as e:
             return {'Code': 500,
                     'Message': str(e)}
 
+
+@api.route('/appointment')
+class Appointment(Resource):
+    # Send an email confirmation to the user
     def post(self):
         try:
-            # Send an email to the user
-            email = request.form.get('email')
-            doctor_name = request.form.get('doctor_name')
-            time = request.form.get('time')
-            email = request.form.get('email')
+            # Parse
+            email = request.values.get('email')
+            doctor = request.values.get('doctor')
+            time = request.values.get('time')
+            email = request.values.get('email')
+
+            message = """ Your appointment with {} at time {} has been accepted. """.format(doctor, time)
 
             # Send email
+            # Create a secure SSL context
+            context = ssl.create_default_context()
 
-            return {'code': 200}
+            with smtplib.SMTP_SSL("smtp.gmail.com", GMAIL_PORT, context=context) as server:
+                server.login(GMAIL_FROM_EMAIL, GMAIL_PASSWORD)
+                server.sendmail(GMAIL_FROM_EMAIL, email, message)
+
+            return {'Code': 200}
 
         except Exception as e:
             return {'Code': 500,

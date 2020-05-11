@@ -5,6 +5,9 @@ from flask_restplus import Resource, Api, fields
 from flask_cors import CORS, cross_origin
 import smtplib, ssl
 
+import logging
+logging.basicConfig(level=logging.INFO, filename='../debug.log')
+
 app = Flask(__name__)
 cors = CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///doctors.sqlite3'
@@ -64,6 +67,8 @@ class Doctors(Resource):
                     'doctors': docs}
 
         except Exception as e:
+            print(str(e))
+            logging.error(e)
             return {'Code': 500,
                     'Message': str(e)}
 
@@ -74,13 +79,13 @@ class Appointment(Resource):
     def post(self):
         try:
             # Parse
-            email = request.values.get('email')
+            name = request.values.get('name')
             doctor = request.values.get('doctor')
             time = request.values.get('time')
             email = request.values.get('email')
 
-            message = """ Your appointment with {} at time {} has been accepted. """.format(doctor, time)
-
+            message = """ Hello {}. Your appointment with {} at {} has been accepted. """.format(name, doctor,
+                                                                                                 time)
             # Send email
             # Create a secure SSL context
             context = ssl.create_default_context()
@@ -92,6 +97,8 @@ class Appointment(Resource):
             return {'Code': 200}
 
         except Exception as e:
+            print(str(e))
+            logging.error(e)
             return {'Code': 500,
                     'Message': str(e)}
 
